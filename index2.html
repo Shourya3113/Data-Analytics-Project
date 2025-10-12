@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Emotion From Handwriting</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <div class="header-content">
+      <h1>Emotion From Handwriting</h1>
+      <div id="theme-language-switcher">
+        <button id="light-theme" class="theme-btn">Light</button>
+        <button id="dark-theme" class="theme-btn">Dark</button>
+        <button id="classic-theme" class="theme-btn">Classic</button>
+        <select id="language-select" class="language-select">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="upload-section">
+      <form id="upload-form" method="POST" action="/predict" enctype="multipart/form-data" class="upload-container">
+        <div class="upload-box" id="upload-box" role="button" aria-label="Upload handwritten image">
+          <div class="icon">🖼</div>
+          <p id="upload-instruction">Click or drag to upload your handwritten image</p>
+          <input type="file" id="file-upload" name="file" class="file-upload" accept="image/*" required>
+        </div>
+
+        <div id="preview-container" class="preview-container" style="display:none;">
+          <img id="preview-img" src="" alt="Preview Image">
+          <div id="thumbs-up" class="thumbs-up" style="opacity:0;transition:all .3s;">👍</div>
+        </div>
+
+        <div class="form-actions" style="margin-top:16px; display:flex; gap:12px; align-items:center;">
+          <button id="analyze-btn" class="analyze-btn" type="submit">Analyze</button>
+          <button id="preview-only-btn" class="analyze-btn ghost" type="button">Preview Only</button>
+          <div id="form-loading" class="form-loading" style="display:none;">Uploading…</div>
+        </div>
+      </form>
+    </section>
+
+    <section id="progress-section" class="progress-section" style="display:none;">
+      <div id="progress-bar-container" class="progress-bar-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <p>Uploading and analyzing your handwriting...</p>
+    </section>
+
+    <section id="result-section" class="result-section" style="display:none;">
+      <h2>Predicted Emotion</h2>
+      <div id="emotion-result" class="emotion-result">Emotion: ...</div>
+      <div id="confidence" class="confidence">Confidence: 0%</div>
+      <div id="emotion-breakdown" class="emotion-breakdown"></div>
+      <button id="save-btn" class="save-btn">Save & Share</button>
+    </section>
+
+    <section id="history-section" class="history-section" style="display:none;">
+      <h2>Previous Analyses</h2>
+      <div id="history-list" class="history-list">
+        <div class="history-item">No history yet</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Emotion From Handwriting | All rights reserved.</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='scrits.js') }}"></script>
+</body>
+</html>
