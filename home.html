@@ -2,55 +2,196 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Emotion Detector</title>
-    <link href="https://fonts.googleapis.com/css2?family=San+Francisco:wght@400;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum AI Emotion Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'San Francisco', -apple-system, BlinkMacSystemFont, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f5f5f7;
-            color: #1d1d1f;
+            font-family: 'Inter', sans-serif;
         }
-        h1 {
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        input[type="file"] {
-            margin-bottom: 20px;
-        }
-        button {
-            background-color: #0071e3;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 16px;
+        /* Style for the custom file input button */
+        .file-input-label {
             cursor: pointer;
-        }
-        button:hover {
-            background-color: #005bb5;
         }
     </style>
 </head>
-<body>
-    <h1>Emotion Detector</h1>
-    <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/*" required>
-        <button type="submit">Detect Emotion</button>
-    </form>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl mx-auto">
+        <main class="bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50">
+            <div class="p-8 md:p-12">
+                <div class="text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-slate-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5" />
+                    </svg>
+                    <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Handwriting Analysis</h1>
+                    <p class="mt-3 text-slate-600">Upload an image of handwriting to detect the underlying emotion.</p>
+                </div>
+
+                <form id="upload-form" class="mt-8 space-y-6">
+                    <div>
+                        <label for="file-upload" class="sr-only">Choose file</label>
+                        <div class="flex items-center justify-center w-full">
+                            <label for="file-upload" class="file-input-label flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl hover:bg-slate-100 transition">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <svg class="w-8 h-8 mb-4 text-slate-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                    </svg>
+                                    <p class="mb-2 text-sm text-slate-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                    <p id="file-name" class="text-xs text-slate-500">PNG, JPG, or JPEG</p>
+                                </div>
+                                <input id="file-upload" name="file" type="file" class="hidden" accept="image/*" />
+                            </label>
+                        </div>
+                    </div>
+
+                    <button id="submit-button" type="submit" class="w-full flex items-center justify-center px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300">
+                        <span id="button-text">Analyze Emotion</span>
+                        <svg id="button-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <div id="result-container" class="px-8 md:px-12 pb-10 hidden">
+                <div id="result-card" class="p-6 rounded-xl transition-all duration-300">
+                    <div class="flex">
+                        <div id="result-icon" class="flex-shrink-0 mr-4">
+                            </div>
+                        <div class="flex-grow">
+                            <h3 id="result-title" class="text-xl font-bold"></h3>
+                            <p id="result-message" class="text-sm mt-1"></p>
+                            <img id="preview-img" class="mt-4 rounded-lg border border-slate-300 max-w-full h-auto" alt="Uploaded Handwriting"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="text-center mt-8">
+            <p class="text-sm text-slate-500">© 2025 Quantum AI Project — Designed with ❤️</p>
+        </footer>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-upload');
+        const fileNameDisplay = document.getElementById('file-name');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const buttonLoader = document.getElementById('button-loader');
+
+        const resultContainer = document.getElementById('result-container');
+        const resultCard = document.getElementById('result-card');
+        const resultIcon = document.getElementById('result-icon');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const previewImg = document.getElementById('preview-img');
+
+        // --- SVGs for different emotions ---
+        const icons = {
+            happy: `<svg class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            sad: `<svg class="h-10 w-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            angry: `<svg class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            fear: `<svg class="h-10 w-10 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            default: `<svg class="h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+        };
+
+        const resultStyles = {
+            happy: { bg: 'bg-green-50', title: 'text-green-800', msg: 'text-green-700', text: 'Happy' },
+            sad: { bg: 'bg-blue-50', title: 'text-blue-800', msg: 'text-blue-700', text: 'Sad' },
+            angry: { bg: 'bg-red-50', title: 'text-red-800', msg: 'text-red-700', text: 'Angry' },
+            fear: { bg: 'bg-purple-50', title: 'text-purple-800', msg: 'text-purple-700', text: 'Fear' },
+            default: { bg: 'bg-gray-50', title: 'text-gray-800', msg: 'text-gray-700', text: 'Neutral' },
+        };
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.textContent = fileInput.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'PNG, JPG, or JPEG';
+            }
+        });
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (fileInput.files.length === 0) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            // Show loading state
+            buttonText.classList.add('hidden');
+            buttonLoader.classList.remove('hidden');
+            submitButton.disabled = true;
+            resultContainer.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                // IMPORTANT: Change this URL to your Flask endpoint if it's different
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResult(data);
+
+            } catch (error) {
+                console.error("Error fetching prediction:", error);
+                displayResult({ emotion: 'error', message: 'Could not connect to the server.' });
+            } finally {
+                // Hide loading state
+                buttonText.classList.remove('hidden');
+                buttonLoader.classList.add('hidden');
+                submitButton.disabled = false;
+            }
+        });
+
+        function displayResult(data) {
+            // Clear previous styles
+            Object.values(resultStyles).forEach(style => {
+                resultCard.classList.remove(style.bg);
+                resultTitle.classList.remove(style.title);
+                resultMessage.classList.remove(style.msg);
+            });
+            
+            const emotion = data.emotion ? data.emotion.toLowerCase() : 'default';
+            const styles = resultStyles[emotion] || resultStyles.default;
+
+            resultCard.classList.add(styles.bg);
+            resultTitle.classList.add(styles.title);
+            resultMessage.classList.add(styles.msg);
+
+            resultIcon.innerHTML = icons[emotion] || icons.default;
+            resultTitle.textContent = styles.text.charAt(0).toUpperCase() + styles.text.slice(1);
+            resultMessage.textContent = `Our model detected a state of ${styles.text} in the handwriting.`;
+
+            if (data.image_url) {
+                previewImg.src = data.image_url;
+                previewImg.classList.remove('hidden');
+            } else {
+                previewImg.classList.add('hidden');
+            }
+
+            if (emotion === 'error') {
+                 resultTitle.textContent = 'An Error Occurred';
+                 resultMessage.textContent = data.message;
+                 previewImg.classList.add('hidden');
+            }
+
+            resultContainer.classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
