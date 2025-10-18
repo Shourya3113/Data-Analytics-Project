@@ -1,4 +1,6 @@
-# Quantum AI Handwriting Emotion Classifier
+# ===============================================================
+# Quantum AI Handwriting Emotion Classifier (Laptop-Optimized)
+# ===============================================================
 
 import os
 import numpy as np
@@ -133,4 +135,3 @@ print(classification_report(y_test, predictions, target_names=labels))
 
 print("\nConfusion Matrix:")
 print(confusion_matrix(y_test, predictions))
-

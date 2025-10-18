@@ -1,15 +1,17 @@
-# emotion_detector.py
+import os
 import torch
 import torch.nn as nn
 from torchvision import transforms
 from PIL import Image
-from flask import Flask, render_template, request, redirect, url_for
-import os
+from flask import Flask, render_template, request, jsonify, send_from_directory
+from werkzeug.utils import secure_filename
 
 # ----------------------------
 # Flask setup
 # ----------------------------
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # ----------------------------
 # Model definition
@@ -65,24 +67,36 @@ def home():
 @app.route("/predict", methods=["POST"])
 def predict():
     if "file" not in request.files:
-        return redirect(request.url)
+        return jsonify({"emotion": "error", "message": "No file uploaded."})
+
     file = request.files["file"]
     if file.filename == "":
-        return redirect(request.url)
+        return jsonify({"emotion": "error", "message": "No file selected."})
 
-    img = Image.open(file.stream).convert("L")
-    img = transform(img).unsqueeze(0).to(DEVICE)
+    try:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
 
-    with torch.no_grad():
-        output = model(img)
-        _, pred = torch.max(output, 1)
-        predicted_emotion = EMOTIONS[pred.item()]
+        # Preprocess image
+        img = Image.open(filepath).convert("L")
+        img = transform(img).unsqueeze(0).to(DEVICE)
 
-    return render_template("result.html", emotion=predicted_emotion)
+        # Model prediction
+        with torch.no_grad():
+            output = model(img)
+            _, pred = torch.max(output, 1)
+            predicted_emotion = EMOTIONS[pred.item()]
 
-@app.route("/home")
-def go_home():
-    return redirect(url_for("home"))
+        image_url = f"/{app.config['UPLOAD_FOLDER']}/{filename}"
+        return jsonify({"emotion": predicted_emotion, "image_url": image_url})
+
+    except Exception as e:
+        return jsonify({"emotion": "error", "message": str(e)})
+
+@app.route('/static/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 # ----------------------------
 # Run app
